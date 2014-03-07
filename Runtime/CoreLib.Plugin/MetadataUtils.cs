@@ -320,6 +320,14 @@ namespace CoreLib.Plugin {
 		}
 
 		public static bool IsReflectable(IMember member, IMetadataImporter metadataImporter) {
+
+            //all non-private constructors are reflectable
+ 		    var method = member as IMethod;
+ 		    if (method != null && method.IsConstructor //it's a constructor 
+                && method.DeclaringTypeDefinition != null // and it's not an anonymous type 
+                && IsMemberReflectable(member, MemberReflectability.NonPrivate))
+ 		        return true;
+ 
 			var ra = AttributeReader.ReadAttribute<ReflectableAttribute>(member);
 			if (ra != null)
 				return ra.Reflectable;

@@ -604,7 +604,7 @@ namespace CoreLib.Plugin {
 			}
 			else if (preferredName == "") {
 				Message(property.IsIndexer ? Messages._7104 : Messages._7105, property);
-				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
+				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("") : null);
 				return;
 			}
 			else if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).IsSerializable && !property.IsStatic) {

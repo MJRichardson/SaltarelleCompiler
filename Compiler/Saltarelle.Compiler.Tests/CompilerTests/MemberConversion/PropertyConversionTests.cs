@@ -244,5 +244,109 @@ namespace Saltarelle.Compiler.Tests.CompilerTests.MemberConversion {
 			FindInstanceMethod("C.set_SomeProp").Definition.Should().BeNull();
 			FindInstanceFieldInitializer("C.$SomeProp").Should().BeNull();
 		}
-	}
+
+        #region #acute script-friendly property methods
+        [Test]
+		public void InstanceAutoPropertiesWithScriptFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
+			                                                };
+
+			Compile(new[] { "class C { public string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
+			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.SomeProp").Should().NotBeNull();
+		    FindInstanceMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(1);
+		}
+
+		[Test]
+		public void InstanceManuallyImplementedReadOnlyWithScripFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, MethodScriptSemantics.NormalMethod("get_" + p.Name), null),
+			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
+			                                                };
+
+			Compile(new[] { "class C { public int SomeProp { get { return 0; } } }" }, metadataImporter: metadataImporter);
+			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.set_SomeProp").Should().BeNull();
+			FindInstanceMethod("C.SomeProp").Should().NotBeNull();
+		    FindInstanceMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(0);
+		}
+
+		[Test]
+		public void InstanceManuallyImplementedWriteOnlyWithScripFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, null, MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
+			                                                };
+
+			Compile(new[] { "class C { public int SomeProp { set {} } }" }, metadataImporter: metadataImporter);
+			FindInstanceMethod("C.get_SomeProp").Should().BeNull();
+			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.SomeProp").Should().NotBeNull();
+		    FindInstanceMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(1);
+		}
+
+		[Test]
+		public void StaticAutoPropertiesWithScriptFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
+			                                                };
+
+			Compile(new[] { "class C { public static string SomeProp { get; set; } }" }, metadataImporter: metadataImporter);
+			FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
+			FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
+			FindStaticMethod("C.SomeProp").Should().NotBeNull();
+		    FindStaticMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(1);
+		}
+
+		[Test]
+		public void InstanceManuallyImplementedReadWritePropertiesWithScriptFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+			                                                };
+
+			Compile(new[] { "class C { public int SomeProp { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
+			FindInstanceMethod("C.get_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.set_SomeProp").Should().NotBeNull();
+			FindInstanceMethod("C.SomeProp").Should().NotBeNull();
+		    FindInstanceMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(1);
+		}
+
+		[Test]
+		public void StaticManuallyImplementedReadWritePropertiesWithScriptFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, MethodScriptSemantics.NormalMethod("get_" + p.Name), MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+			                                                };
+
+			Compile(new[] { "class C { public static int SomeProp { get { return 0; } set {} } }" }, metadataImporter: metadataImporter);
+			FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
+			FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
+			FindStaticMethod("C.SomeProp").Should().NotBeNull();
+		    FindStaticMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(1);
+		}
+
+		[Test]
+		public void StaticManuallyImplementedReadOnlyWithScripFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, MethodScriptSemantics.NormalMethod("get_" + p.Name), null),
+			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
+			                                                };
+
+			Compile(new[] { "class C { public static int SomeProp { get { return 0; } } }" }, metadataImporter: metadataImporter);
+			FindStaticMethod("C.get_SomeProp").Should().NotBeNull();
+			FindStaticMethod("C.set_SomeProp").Should().BeNull();
+			FindStaticMethod("C.SomeProp").Should().NotBeNull();
+		    FindStaticMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(0);
+		}
+
+		[Test]
+		public void StaticManuallyImplementedWriteOnlyWithScripFriendlyMethodAreCorrectlyImported() {
+			var metadataImporter = new MockMetadataImporter { GetPropertySemantics = p => PropertyScriptSemantics.ScriptFriendlyCombinedMethod(p.Name, null, MethodScriptSemantics.NormalMethod("set_" + p.Name)),
+			                                                  GetAutoPropertyBackingFieldName = p => "$" + p.Name
+			                                                };
+
+			Compile(new[] { "class C { public static int SomeProp { set {} } }" }, metadataImporter: metadataImporter);
+			FindStaticMethod("C.get_SomeProp").Should().BeNull();
+			FindStaticMethod("C.set_SomeProp").Should().NotBeNull();
+			FindStaticMethod("C.SomeProp").Should().NotBeNull();
+		    FindStaticMethod("C.SomeProp").Definition.ParameterNames.Count.Should().Be(1);
+        }
+        #endregion
+    }
 }

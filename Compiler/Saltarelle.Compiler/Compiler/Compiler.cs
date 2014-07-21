@@ -425,6 +425,13 @@ namespace Saltarelle.Compiler.Compiler {
 							MaybeCompileAndAddMethodToType(jsClass, propertyDeclaration.Setter, propertyDeclaration.Setter.Body, property.Setter, impl.SetMethod);
 						}
 					}
+
+                    //#acute
+				    if (impl.GenerateScriptFriendlyCombinedMethod)
+				    {
+    			        var compiledCombinedGetAndSet = CreateMethodCompiler().CompilePropertyScriptFriendlyMethod(property, impl); 
+                        AddCompiledMethodToType(jsClass, property.Setter ?? property.Getter, impl.CombinedMethod, new JsMethod(property, impl.CombinedMethod.Name,   new string[0], compiledCombinedGetAndSet) );
+				    }
 					break;
 				}
 				case PropertyScriptSemantics.ImplType.Field: {

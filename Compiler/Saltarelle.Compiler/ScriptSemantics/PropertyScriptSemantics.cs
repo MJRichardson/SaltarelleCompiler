@@ -22,9 +22,13 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 		/// </summary>
 		public ImplType Type { get; private set; }
 
+        //#acute 
+        public bool GenerateScriptFriendlyCombinedMethod { get; private set; }
+
 		private string _fieldName;
 		private MethodScriptSemantics _getMethod;
 		private MethodScriptSemantics _setMethod;
+		private MethodScriptSemantics _combinedMethod;
 
 		public MethodScriptSemantics GetMethod {
 			get {
@@ -39,6 +43,15 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 				if (Type != ImplType.GetAndSetMethods)
 					throw new InvalidOperationException();
 				return _setMethod;
+			}
+		}
+
+        //#acute
+		public MethodScriptSemantics CombinedMethod {
+			get {
+				if (Type != ImplType.GetAndSetMethods)
+					throw new InvalidOperationException();
+				return _combinedMethod;
 			}
 		}
 
@@ -64,6 +77,11 @@ namespace Saltarelle.Compiler.ScriptSemantics {
 
 		public static PropertyScriptSemantics NotUsableFromScript() {
 			return new PropertyScriptSemantics { Type = ImplType.NotUsableFromScript };
+		}
+
+        //#acute
+		public static PropertyScriptSemantics ScriptFriendlyCombinedMethod(string combinedMethodName, MethodScriptSemantics getMethod, MethodScriptSemantics setMethod) {
+			return new PropertyScriptSemantics { Type = ImplType.GetAndSetMethods, _getMethod = getMethod, _setMethod = setMethod, _combinedMethod = MethodScriptSemantics.NormalMethod(combinedMethodName), GenerateScriptFriendlyCombinedMethod = true};
 		}
 	}
 }

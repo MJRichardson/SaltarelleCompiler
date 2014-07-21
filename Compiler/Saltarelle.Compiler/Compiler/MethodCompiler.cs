@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using ICSharpCode.NRefactory.CSharp;
 using ICSharpCode.NRefactory.CSharp.Resolver;
+using ICSharpCode.NRefactory.Semantics;
 using ICSharpCode.NRefactory.TypeSystem;
 using Saltarelle.Compiler.JSModel;
 using Saltarelle.Compiler.JSModel.Expressions;
 using Saltarelle.Compiler.JSModel.Statements;
 using Saltarelle.Compiler.ScriptSemantics;
 using Saltarelle.Compiler.JSModel.ExtensionMethods;
+using Expression = ICSharpCode.NRefactory.CSharp.Expression;
 
 namespace Saltarelle.Compiler.Compiler {
 	public class MethodCompiler {
@@ -257,6 +260,70 @@ namespace Saltarelle.Compiler.Compiler {
 				return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
 			}
 		}
+
+        //#acute: compile properties into a combined get/set method with a script-friendly name
+	    public JsFunctionDefinitionExpression CompilePropertyScriptFriendlyMethod(IProperty property, PropertyScriptSemantics impl)
+	    {
+	        try
+	        {
+	            JsStatement returnStatement = null;
+	            JsExpression setExpression = null;
+	            IEnumerable<string> parameters = new string[]{};
+
+	            if (impl.GetMethod != null)
+	            {
+    				CreateCompilationContext( null, null, property.DeclaringTypeDefinition, null);
+	                returnStatement =
+                        JsStatement.Return(
+	                    _statementCompiler.ExpressionCompiler.Compile(
+	                        new InvocationResolveResult(new ThisResolveResult(property.DeclaringTypeDefinition), property),
+	                        true).Expression);
+	            }
+
+	            if (impl.SetMethod != null)
+	            {
+    				CreateCompilationContext( Expression.Null, property.Setter, property.DeclaringTypeDefinition, null);
+    				string valueName = _namer.GetVariableName(property.Setter.Parameters[0].Name, new HashSet<string>(property.DeclaringTypeDefinition.TypeParameters.Select(p => _namer.GetTypeParameterName(p))));
+	                parameters = new[] {valueName};
+
+	                setExpression =
+	                    _statementCompiler.ExpressionCompiler.Compile(
+	                        new OperatorResolveResult(property.Setter.Parameters[0].Type, ExpressionType.Assign,
+	                            new MemberResolveResult(new ThisResolveResult(property.DeclaringTypeDefinition), property),
+	                            new LocalResolveResult(property.Setter.Parameters[0])), false).Expression;
+	            }
+
+	            if (impl.GetMethod != null && impl.SetMethod == null) {
+	                return JsExpression.FunctionDefinition( parameters, returnStatement );
+	            }
+
+	            if (impl.SetMethod != null && impl.GetMethod == null) {
+	                return JsExpression.FunctionDefinition(parameters, JsStatement.Expression(setExpression));
+	            }
+
+                //if the property is read/write, then the method inspects the arguments to decide whether to get or set
+	            if (impl.GetMethod != null && impl.SetMethod != null) {
+
+	                return JsExpression.FunctionDefinition(
+	                    parameters,
+	                    JsStatement.If(
+	                        JsExpression.Equal(JsExpression.MemberAccess(JsExpression.Identifier("arguments"), "length"),
+	                            JsExpression.Number(0)),
+	                        returnStatement,
+	                        setExpression
+	                        ));
+	            }
+
+                //otherwise neither a get nor a set method are implemented
+	            return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
+
+	        }
+	        catch (Exception ex) {
+	            _errorReporter.Region = property.Getter.Region;
+	            _errorReporter.InternalError(ex);
+	            return JsExpression.FunctionDefinition(new string[0], JsStatement.EmptyBlock);
+	        }
+	    }
 
 		public JsFunctionDefinitionExpression CompileAutoEventAdder(IEvent @event, EventScriptSemantics impl, string backingFieldName) {
 			try {

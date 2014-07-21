@@ -18,22 +18,28 @@ public class C1 {
 
 			var p1 = FindProperty("C1.Prop1");
 			Assert.That(p1.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+            Assert.That(p1.GenerateScriptFriendlyCombinedMethod, Is.True);
 			Assert.That(p1.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.GetMethod.Name, Is.EqualTo("get_prop1"));
 			Assert.That(p1.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p1.SetMethod.Name, Is.EqualTo("set_prop1"));
+			Assert.That(p1.CombinedMethod.Name, Is.EqualTo("Prop1"));
 
 			var p2 = FindProperty("C1.Prop2");
 			Assert.That(p2.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+            Assert.That(p1.GenerateScriptFriendlyCombinedMethod, Is.True);
 			Assert.That(p2.GetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p2.GetMethod.Name, Is.EqualTo("get_prop2"));
 			Assert.That(p2.SetMethod, Is.Null);
+			Assert.That(p2.CombinedMethod.Name, Is.EqualTo("Prop2"));
 
 			var p3 = FindProperty("C1.Prop3");
 			Assert.That(p3.Type, Is.EqualTo(PropertyScriptSemantics.ImplType.GetAndSetMethods));
+            Assert.That(p1.GenerateScriptFriendlyCombinedMethod, Is.True);
 			Assert.That(p3.GetMethod, Is.Null);
 			Assert.That(p3.SetMethod.Type, Is.EqualTo(MethodScriptSemantics.ImplType.NormalMethod));
 			Assert.That(p3.SetMethod.Name, Is.EqualTo("set_prop3"));
+			Assert.That(p3.CombinedMethod.Name, Is.EqualTo("Prop3"));
 		}
 
 		[Test]

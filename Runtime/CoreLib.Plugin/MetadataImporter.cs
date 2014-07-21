@@ -604,7 +604,7 @@ namespace CoreLib.Plugin {
 			}
 			else if (preferredName == "") {
 				Message(property.IsIndexer ? Messages._7104 : Messages._7105, property);
-				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("") : null);
+				_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(property.CanGet ? MethodScriptSemantics.NormalMethod("get") : null, property.CanSet ? MethodScriptSemantics.NormalMethod("set") : null);
 				return;
 			}
 			else if (GetTypeSemanticsInternal(property.DeclaringTypeDefinition).IsSerializable && !property.IsStatic) {
@@ -793,7 +793,14 @@ namespace CoreLib.Plugin {
 				setter = null;
 			}
 
-			_propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(getter, setter);
+            if ( property.IsPublic && !property.IsExplicitInterfaceImplementation && !property.IsIndexer && !usedNames.ContainsKey(property.Name) )
+            {
+                usedNames[property.Name] = true;
+                _propertySemantics[property] = PropertyScriptSemantics.ScriptFriendlyCombinedMethod(property.Name, getter, setter);
+            }
+            else {
+		        _propertySemantics[property] = PropertyScriptSemantics.GetAndSetMethods(getter, setter);
+            }
 		}
 
 		private void ProcessMethod(IMethod method, string preferredName, bool nameSpecified, Dictionary<string, bool> usedNames) {

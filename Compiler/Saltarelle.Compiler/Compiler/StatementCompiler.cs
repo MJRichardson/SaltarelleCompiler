@@ -81,6 +81,9 @@ namespace Saltarelle.Compiler.Compiler {
 
 		internal static bool DisableStateMachineRewriteTestingUseOnly;
 
+        //#acute: added to allow MethodCompiler to reference the ExpressionCompiler
+        internal ExpressionCompiler ExpressionCompiler { get { return _expressionCompiler; } }
+
 		private JsBlockStatement MakeIteratorBody(IteratorStateMachine sm, bool returnsIEnumerable, IType yieldType, string yieldResultVariable, IList<string> methodParameterNames) {
 			var body = new List<JsStatement>();
 			body.Add(JsStatement.Var(new[] { JsStatement.Declaration(yieldResultVariable, null) }.Concat(sm.Variables)));
